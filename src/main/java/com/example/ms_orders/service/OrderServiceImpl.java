@@ -123,6 +123,6 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Page<Order> list(String client, String status, Pageable pageable) {
-        return orderRepository.findAll(pageable); // Puedes agregar filtro si lo deseas
+        return orderRepository.findAll(pageable);
     }
 }

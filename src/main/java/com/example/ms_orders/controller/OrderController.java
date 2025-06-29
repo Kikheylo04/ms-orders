@@ -53,8 +53,6 @@ public class OrderController {
         Page<Order> pageResult = orderService.list(client, status, pageable);
         return ResponseEntity.ok(pageResult.getContent());
     }
-
-    // --- NUEVO ENDPOINT para devolver orden + detalles del producto ---
     @GetMapping("/{id}/with-product-details")
     public ResponseEntity<OrderDto> getOrderWithProductDetails(@PathVariable Long id) {
         OrderDto orderDto = orderService.getOrderWithProductDetails(id);
