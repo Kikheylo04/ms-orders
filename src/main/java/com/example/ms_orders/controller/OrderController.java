@@ -22,7 +22,6 @@ public class OrderController {
         this.orderService = orderService;
     }
 
-    // --- CRUD básico ---
     @PostMapping
     public Order create(@RequestBody Order order) {
         return orderService.create(order);
