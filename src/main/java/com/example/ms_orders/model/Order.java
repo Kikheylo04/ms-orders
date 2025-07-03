@@ -1,7 +1,7 @@
 package com.example.ms_orders.model;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import jakarta.persistence.*;
@@ -19,10 +19,11 @@ public class Order {
     private Long id;
 
     private String client;
-    private LocalDate date;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     private String status;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items;
 
     private BigDecimal total;

@@ -2,6 +2,7 @@ package com.example.ms_orders.service;
 
 import java.math.BigDecimal;
 import java.security.InvalidParameterException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -44,6 +45,13 @@ public class OrderServiceImpl implements OrderService {
                 throw new ProductNotFoundException(item.getProductId());
             }
 
+            if (item.getQuantity() > realProduct.getStock()) {
+                throw new InvalidParameterException(
+                        String.format(
+                                "No hay suficiente stock para el producto con ID: %d. Stock disponible: %d, solicitado: %d",
+                                item.getProductId(), realProduct.getStock(), item.getQuantity()));
+            }
+
             item.setProductName(realProduct.getName());
             item.setProductPrice(realProduct.getPrice());
             item.setOrder(order);
@@ -52,6 +60,9 @@ public class OrderServiceImpl implements OrderService {
             total = total.add(subtotal);
         }
 
+        LocalDateTime now = LocalDateTime.now();
+        order.setCreatedAt(now);
+        order.setUpdatedAt(now);
         order.setTotal(total);
         return orderRepository.save(order);
     }
@@ -62,10 +73,10 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new OrderNotFoundException(id));
 
         existingOrder.setClient(updatedOrder.getClient());
-        existingOrder.setDate(updatedOrder.getDate());
         existingOrder.setStatus(updatedOrder.getStatus());
-
         existingOrder.getItems().clear();
+        orderRepository.save(existingOrder);
+
         BigDecimal total = BigDecimal.ZERO;
 
         for (OrderItem item : updatedOrder.getItems()) {
@@ -76,6 +87,13 @@ public class OrderServiceImpl implements OrderService {
             ProductDto realProduct = productClient.getProductById(item.getProductId());
             if (realProduct == null) {
                 throw new ProductNotFoundException(item.getProductId());
+            }
+
+            if (item.getQuantity() > realProduct.getStock()) {
+                throw new InvalidParameterException(
+                        String.format(
+                                "No hay suficiente stock para el producto con ID: %d. Stock disponible: %d, solicitado: %d",
+                                item.getProductId(), realProduct.getStock(), item.getQuantity()));
             }
 
             item.setProductName(realProduct.getName());
@@ -89,6 +107,8 @@ public class OrderServiceImpl implements OrderService {
         }
 
         existingOrder.setTotal(total);
+        existingOrder.setCreatedAt(updatedOrder.getCreatedAt());
+        existingOrder.setUpdatedAt(LocalDateTime.now());
         return orderRepository.save(existingOrder);
     }
 
@@ -105,17 +125,17 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new OrderNotFoundException(id));
     }
 
-     @Override
+    @Override
     public OrderDto getOrderWithProductDetails(Long id) {
         Order order = orderRepository.findById(id)
-            .orElseThrow(() -> new OrderNotFoundException(id));
+                .orElseThrow(() -> new OrderNotFoundException(id));
 
         List<OrderItemDto> itemDtos = order.getItems().stream()
-            .map(item -> {
-                ProductDto product = productClient.getProductById(item.getProductId());
-                return new OrderItemDto(item, product);
-            })
-            .collect(Collectors.toList());
+                .map(item -> {
+                    ProductDto product = productClient.getProductById(item.getProductId());
+                    return new OrderItemDto(item, product);
+                })
+                .collect(Collectors.toList());
 
         return new OrderDto(order, itemDtos);
 
